@@ -1,0 +1,55 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+df<-read.csv(file="C:/Users/cscoder/Downloads/crime.csv")
+df$Time<-format(as.POSIXct(strptime(df$FIRST_OCCURRENCE_DATE,"%m/%d/%Y %H:%M:%S",tz="")),format="%H:%M:%S")
+df$Date<-as.Date(df$FIRST_OCCURRENCE_DATE,format="%m/%d/%Y")
+df<-df[c("OFFENSE_ID","OFFENSE_CATEGORY_ID","Date","Time","INCIDENT_ADDRESS","DISTRICT_ID","GEO_Y","GEO_LON","GEO_LAT","IS_CRIME")]
+df[1:5,]
+summary(df)
+tapply(df$IS_CRIME,INDEX=df$DISTRICT_ID,FUN=sum)
+District1<-c(58078,50006,67126)
+District2<-c(50791,35360,77932,4065)
+t.test(x=District1,y=District2,alternative="two.sided",conf.level=0.95,var.equal=TRUE)
+df$Year<-as.numeric(format(df$Date,"%Y"))
+tapply(df$IS_CRIME, df$Year, FUN=sum)
+barplot(tapply(df$IS_CRIME, df$Year, FUN=sum),xlab="Year",ylab="crime number",main="Crimes change over years",col="red",ylim=c(0,80000))
+library(lubridate)
+
+
+df %>%
+  group_by(DISTRICT_ID) %>%
+  summarise(crimes=sum(IS_CRIME)) %>%
+  ungroup() %>%
+  ggplot(df,mapping=aes(reorder(DISTRICT_ID,crimes),crimes)) +
+  geom_bar(stat="identity",mapping=aes(fill=DISTRICT_ID),color="black") +
+  coord_flip() +
+  geom_text(mapping=aes(label=comma(crimes)),hjust=1) +
+  theme_classic()+
+  theme(legend.position="none") +
+  labs(title="crimes in district over the year",x="",y="")
+
+df %>%
+  group_by(OFFENSE_CATEGORY_ID) %>%
+  summarise(crimetotal=sum(IS_CRIME,na.rm=TRUE)) %>%
+  ungroup() %>%
+  ggplot(df, mapping=aes(x="", y=crimetotal, fill=OFFENSE_CATEGORY_ID)) +   geom_bar(stat="identity")+
+  coord_polar("y")
+
+```
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
